@@ -10,6 +10,14 @@
 - 💰 **Монетизация**: доход, CPM, ROI по видео
 - 📱 **Мобильная версия**: полный функционал на телефоне
 
+## 🚀 GitHub Pages (Frontned)
+
+Dashboard автоматически деплоится на GitHub Pages при каждом push:
+
+👉 **https://makskrev.github.io/dashboard/**
+
+Workflow: `.github/workflows/pages.yml` собирает фронтенд и публикует на Pages.
+
 ## Локальный запуск
 
 ```bash
@@ -19,35 +27,22 @@ npm run dev
 
 Открыть http://localhost:5173
 
-## Запуск в Docker
+## Docker
 
 ```bash
 docker-compose up
 ```
 
-Доступен на:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3001
+## Backend API
 
-## Публикация на хостинг
+Backend работает отдельно (может быть на другом сервере):
 
-### Railway.app (рекомендуется)
-1. github.com/MAKSKREV/dashboard → Settings → Deployments
-2. Выбрать Railway → Connect
-3. Dashboard автоматически развернётся
-
-### Render.com
 ```bash
-# Создать новый Web Service на Render
-# Выбрать GitHub repo dashboard
-# Выставить: Start command = npm start
+npm install
+npm start
 ```
 
-### Heroku
-```bash
-heroku create your-dashboard
-git push heroku main
-```
+API доступен на `:3001`
 
 ## Подключение к reels-studio
 
@@ -61,6 +56,5 @@ src/
     Dashboard.jsx  # Главная страница
     MetricCard.jsx # Карточка метрики
     ProjectStats.jsx # Статистика проекта
-  api/
-    server.js      # Express backend
+server.js          # Express backend
 ```
