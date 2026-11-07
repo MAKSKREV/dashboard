@@ -1,24 +1,246 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reels Dashboard</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
-      background: #0f0f0f;
-      color: #fff;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Завод: YouTube</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --series: #2a78d6; --wash: rgba(42,120,214,0.10);
+  --good: #006300; --warn: #b07a00; --bad: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series: #3987e5; --wash: rgba(57,135,229,0.16);
+    --good: #0ca30c; --warn: #fab219; --bad: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --series: #3987e5; --wash: rgba(57,135,229,0.16);
+  --good: #0ca30c; --warn: #fab219; --bad: #e66767;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 32px 0 12px; }
+.sub { color: var(--ink-2); margin: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 20px; }
+.kpi .label { color: var(--ink-2); font-size: 13px; }
+.kpi .value { font-size: 28px; font-weight: 600; margin-top: 4px; }
+.kpi .note { color: var(--muted); font-size: 12px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.filters button { font: inherit; border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.12); white-space: nowrap; display: none; z-index: 2; }
+.tip b { font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.ch-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ch-name { font-weight: 600; text-decoration: none; color: var(--ink); }
+.ch-name:hover { text-decoration: underline; }
+.ch-group { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.ch-nums { display: flex; gap: 16px; margin: 8px 0 4px; }
+.ch-nums div { font-size: 12px; color: var(--ink-2); }
+.ch-nums b { display: block; font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.status { font-size: 12px; margin-top: 6px; }
+.status.good { color: var(--good); } .status.warn { color: var(--warn); } .status.bad { color: var(--bad); }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); }
+th { color: var(--ink-2); font-weight: 500; cursor: pointer; user-select: none; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td a { color: var(--ink); }
+.empty { color: var(--muted); }
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+<main>
+  <h1>Завод: YouTube</h1>
+  <p class="sub" id="updated">Загрузка…</p>
+
+  <div class="kpis">
+    <div class="card kpi"><div class="label">Просмотров всего</div><div class="value" id="k-views">—</div><div class="note">по последним 15 роликам канала</div></div>
+    <div class="card kpi"><div class="label">Прирост за 24 ч</div><div class="value" id="k-day">—</div><div class="note" id="k-day-note"></div></div>
+    <div class="card kpi"><div class="label">Роликов за 24 ч</div><div class="value" id="k-new">—</div><div class="note" id="k-new-note"></div></div>
+    <div class="card kpi"><div class="label">Каналов без ролика за сутки</div><div class="value" id="k-idle">—</div><div class="note">план: минимум 1 в день</div></div>
+  </div>
+
+  <div class="filters" id="filters" role="group" aria-label="Группа каналов"></div>
+
+  <h2>Просмотры по времени</h2>
+  <div class="card chart" id="total"></div>
+
+  <h2>Каналы</h2>
+  <div class="grid" id="channels"></div>
+
+  <h2>Ролики</h2>
+  <div class="card tablewrap"><table id="videos"><thead><tr>
+    <th data-k="title">Ролик</th><th data-k="ch">Канал</th><th data-k="published">Вышел</th>
+    <th data-k="views" class="num">Просмотры</th><th data-k="day" class="num">За 24 ч</th><th data-k="likes" class="num">Лайки</th>
+  </tr></thead><tbody></tbody></table></div>
+</main>
+
+<script>
+const fmt = n => n == null ? '—' : n.toLocaleString('ru-RU');
+const DAY = 864e5;
+let channels, hist, group = 'Все', sortKey = 'views', sortDir = -1;
+
+// Просмотры каждого ролика в каждом снимке; ролик, выпавший из RSS, держит последнее значение.
+function series() {
+  const last = {};
+  return hist.snaps.map(s => {
+    for (const [vid, [v, l]] of Object.entries(s.v)) last[vid] = [v, l];
+    return { t: new Date(s.t), v: { ...last } };
+  });
+}
+
+function at(ser, t) { // последний снимок не позже t
+  let r = null;
+  for (const s of ser) if (s.t <= t) r = s;
+  return r;
+}
+
+function sumViews(snap, ids) {
+  if (!snap) return null;
+  let n = 0;
+  for (const [vid, [v]] of Object.entries(snap.v)) if (ids.has(hist.videos[vid].ch)) n += v;
+  return n;
+}
+
+function lineChart(el, pts, { height = 220, axes = true } = {}) {
+  const W = Math.max(200, el.clientWidth - (axes ? 32 : 0)), H = height, pl = axes ? 56 : 2, pr = axes ? 12 : 2, pt = 10, pb = axes ? 26 : 4;
+  el.querySelector('svg')?.remove();
+  el.querySelector('.tip')?.remove();
+  if (pts.length < 2) {
+    el.innerHTML = `<p class="empty">Данных пока мало: первая точка ${pts[0] ? pts[0].t.toLocaleString('ru-RU') : '—'}, динамика появится после следующих снимков (каждые 3 часа).</p>`;
+    return;
+  }
+  const t0 = +pts[0].t, t1 = +pts.at(-1).t;
+  const ys = pts.map(p => p.y), ymin = axes ? 0 : Math.min(...ys);
+  const ymax = axes ? Math.max(1, ...ys) * 1.08 : Math.max(ymin + 1, ...ys);
+  const x = t => pl + (t - t0) / (t1 - t0 || 1) * (W - pl - pr);
+  const y = v => pt + (1 - (v - ymin) / (ymax - ymin)) * (H - pt - pb);
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(+p.t).toFixed(1)},${y(p.y).toFixed(1)}`).join('');
+  let g = '';
+  if (axes) {
+    for (let i = 0; i <= 4; i++) {
+      const v = ymax * i / 4, yy = y(v).toFixed(1);
+      g += `<line x1="${pl}" x2="${W - pr}" y1="${yy}" y2="${yy}" stroke="var(--${i ? 'grid' : 'axis'})" stroke-width="1"/>`;
+      g += `<text x="${pl - 8}" y="${+yy + 4}" text-anchor="end" font-size="12" fill="var(--muted)">${fmt(Math.round(v))}</text>`;
+    }
+    const nx = W < 600 ? 1 : 4;
+    for (let i = 0; i <= nx; i++) {
+      const t = t0 + (t1 - t0) * i / nx;
+      g += `<text x="${x(t)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === nx ? 'end' : 'middle'}" font-size="12" fill="var(--muted)">${new Date(t).toLocaleString('ru-RU', t1 - t0 < 4 * DAY ? { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'short' })}</text>`;
+    }
+  }
+  el.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 ${W} ${H}" style="aspect-ratio:${W}/${H}">
+    ${g}<path d="${d}" fill="none" stroke="var(--series)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+    <line class="cross" y1="${pt}" y2="${H - pb}" stroke="var(--axis)" stroke-width="1" vector-effect="non-scaling-stroke" visibility="hidden"/>
+    <rect width="${W}" height="${H}" fill="transparent"/></svg><div class="tip"></div>`);
+  const svg = el.querySelector('svg'), tip = el.querySelector('.tip'), cross = svg.querySelector('.cross');
+  const move = e => {
+    const r = svg.getBoundingClientRect();
+    const sx = (e.clientX - r.left) / r.width * W;
+    let best = pts[0];
+    for (const p of pts) if (Math.abs(x(+p.t) - sx) < Math.abs(x(+best.t) - sx)) best = p;
+    const cx = x(+best.t);
+    cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<b>${fmt(best.y)}</b><br>${best.t.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+    tip.style.display = 'block';
+    const px = cx / W * r.width;
+    tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
+    tip.style.top = (axes ? -8 : -tip.offsetHeight - 4) + 'px';
+  };
+  svg.addEventListener('pointermove', move);
+  svg.addEventListener('pointerleave', () => { tip.style.display = 'none'; cross.setAttribute('visibility', 'hidden'); });
+}
+
+function render() {
+  const ser = series(), now = ser.at(-1), dayAgo = at(ser, new Date(+now.t - DAY));
+  const shown = channels.filter(c => group === 'Все' || c.group === group);
+  const ids = new Set(shown.map(c => c.id));
+
+  document.getElementById('updated').textContent =
+    `Обновлено ${now.t.toLocaleString('ru-RU')} · снимков ${ser.length} · каналов ${shown.length}`;
+  const total = sumViews(now, ids), prev = sumViews(dayAgo, ids);
+  document.getElementById('k-views').textContent = fmt(total);
+  document.getElementById('k-day').textContent = dayAgo ? '+' + fmt(total - prev) : '—';
+  document.getElementById('k-day-note').textContent = dayAgo ? `с ${dayAgo.t.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'нужно 24 ч истории';
+
+  const fresh = Object.entries(hist.videos).filter(([, m]) => ids.has(m.ch) && +now.t - new Date(m.published) < DAY);
+  document.getElementById('k-new').textContent = fmt(fresh.length);
+  document.getElementById('k-new-note').textContent = `план: ${shown.length}`;
+
+  lineChart(document.getElementById('total'), ser.map(s => ({ t: s.t, y: sumViews(s, ids) })));
+
+  let idle = 0;
+  const box = document.getElementById('channels');
+  box.innerHTML = '';
+  for (const c of shown) {
+    const one = new Set([c.id]);
+    const vids = Object.entries(hist.videos).filter(([, m]) => m.ch === c.id);
+    const lastPub = vids.reduce((a, [, m]) => Math.max(a, +new Date(m.published)), 0);
+    const hrs = lastPub ? (+now.t - lastPub) / 36e5 : Infinity;
+    if (hrs > 24) idle++;
+    const st = hrs <= 24 ? ['good', '✓ ролик за сутки есть'] : hrs <= 48 ? ['warn', `! последний ${Math.round(hrs)} ч назад`] : ['bad', `✕ последний ${lastPub ? Math.round(hrs / 24) + ' дн. назад' : '—'}`];
+    const v = sumViews(now, one), p = sumViews(dayAgo, one);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div class="ch-head"><a class="ch-name" href="https://www.youtube.com/channel/${c.id}/shorts" target="_blank" rel="noopener">${c.name}</a><span class="ch-group">${c.group}</span></div>
+      <div class="ch-nums"><div><b>${fmt(v)}</b>просмотров</div><div><b>${dayAgo ? '+' + fmt(v - p) : '—'}</b>за 24 ч</div><div><b>${vids.length}</b>роликов</div></div>
+      <div class="chart spark"></div><div class="status ${st[0]}">${st[1]}</div>`;
+    box.append(card);
+    lineChart(card.querySelector('.spark'), ser.map(s => ({ t: s.t, y: sumViews(s, one) })), { height: 60, axes: false });
+  }
+  document.getElementById('k-idle').textContent = fmt(idle);
+
+  const name = Object.fromEntries(channels.map(c => [c.id, c.name]));
+  const rows = Object.entries(hist.videos).filter(([, m]) => ids.has(m.ch)).map(([vid, m]) => {
+    const [views, likes] = now.v[vid] ?? [0, 0];
+    const before = dayAgo?.v[vid]?.[0];
+    return { vid, title: m.title.replace(/\s*#shorts\s*$/i, ''), ch: name[m.ch], published: m.published, views, likes, day: dayAgo ? views - (before ?? 0) : null };
+  });
+  rows.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * sortDir);
+  document.querySelector('#videos tbody').innerHTML = rows.map(r => `<tr>
+    <td><a href="https://www.youtube.com/shorts/${r.vid}" target="_blank" rel="noopener">${r.title}</a></td><td>${r.ch}</td>
+    <td>${new Date(r.published).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</td>
+    <td class="num">${fmt(r.views)}</td><td class="num">${r.day == null ? '—' : '+' + fmt(r.day)}</td><td class="num">${fmt(r.likes)}</td></tr>`).join('');
+}
+
+document.querySelectorAll('#videos th').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  sortDir = sortKey === k ? -sortDir : (['title', 'ch'].includes(k) ? 1 : -1);
+  sortKey = k;
+  render();
+}));
+
+Promise.all([fetch('channels.json').then(r => r.json()), fetch('data/history.json', { cache: 'no-store' }).then(r => r.json())]).then(([c, h]) => {
+  channels = c; hist = h;
+  const groups = ['Все', ...new Set(c.map(x => x.group))];
+  const f = document.getElementById('filters');
+  for (const g of groups) {
+    const b = document.createElement('button');
+    b.textContent = g;
+    b.setAttribute('aria-pressed', g === group);
+    b.onclick = () => { group = g; f.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); render(); };
+    f.append(b);
+  }
+  render();
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+}).catch(e => { document.getElementById('updated').textContent = 'Не удалось загрузить данные: ' + e.message; });
+</script>
 </body>
 </html>
