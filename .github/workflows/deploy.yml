@@ -1,0 +1,22 @@
+name: Deploy Dashboard
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t dashboard:latest .
+          docker tag dashboard:latest ghcr.io/makskrev/dashboard:latest
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/makskrev/dashboard:latest
+
+      - name: Deploy to Railway/Render/Heroku
+        run: |
+          echo "Deploy script here"

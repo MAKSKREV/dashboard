@@ -10,14 +10,44 @@
 - 💰 **Монетизация**: доход, CPM, ROI по видео
 - 📱 **Мобильная версия**: полный функционал на телефоне
 
-## Установка
+## Локальный запуск
 
 ```bash
 npm install
 npm run dev
 ```
 
-Откроить http://localhost:5173
+Открыть http://localhost:5173
+
+## Запуск в Docker
+
+```bash
+docker-compose up
+```
+
+Доступен на:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3001
+
+## Публикация на хостинг
+
+### Railway.app (рекомендуется)
+1. github.com/MAKSKREV/dashboard → Settings → Deployments
+2. Выбрать Railway → Connect
+3. Dashboard автоматически развернётся
+
+### Render.com
+```bash
+# Создать новый Web Service на Render
+# Выбрать GitHub repo dashboard
+# Выставить: Start command = npm start
+```
+
+### Heroku
+```bash
+heroku create your-dashboard
+git push heroku main
+```
 
 ## Подключение к reels-studio
 
@@ -30,10 +60,7 @@ src/
   components/      # React компоненты
     Dashboard.jsx  # Главная страница
     MetricCard.jsx # Карточка метрики
-    VideoChart.jsx # График видео
-  pages/
-    Projects.jsx   # Обзор проектов
-    Analytics.jsx  # Аналитика и статистика
+    ProjectStats.jsx # Статистика проекта
   api/
-    metrics.js     # Сбор данных с соцсетей
+    server.js      # Express backend
 ```
