@@ -1,8 +1,15 @@
 {
-  "name": "reels-dashboard",
+  "name": "@makskrev/reels-dashboard",
   "version": "1.0.0",
   "description": "Dashboard for monitoring video metrics and channel performance",
   "type": "module",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MAKSKREV/dashboard.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
