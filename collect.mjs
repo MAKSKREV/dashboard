@@ -11,7 +11,7 @@ try { hist = JSON.parse(await readFile(histUrl, 'utf8')); } catch {}
 
 const unxml = s => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 
-const snap = { t: new Date().toISOString(), v: {}, failed: [] };
+const snap = { t: new Date().toISOString(), v: {}, s: {}, failed: [] };
 for (const ch of channels) {
   let xml;
   try {
@@ -35,7 +35,18 @@ for (const ch of channels) {
     };
     snap.v[vid] = [views, likes];
   }
-  console.log(`${ch.name}: ok`);
+  // Подписчики: со страницы канала, RSS их не отдаёт. Сбой загрузки — пропуск.
+  try {
+    const r = await fetch(`https://www.youtube.com/channel/${ch.id}?hl=en`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/130 Safari/537.36', 'Accept-Language': 'en', Cookie: 'CONSENT=YES+1; SOCS=CAI' },
+      signal: AbortSignal.timeout(30000),
+    });
+    const html = await r.text();
+    const m = html.match(/"content":"([\d.,]+)([KM]?) subscribers?"/);
+    if (m) snap.s[ch.id] = Math.round(parseFloat(m[1].replace(/,/g, '')) * ({ K: 1e3, M: 1e6 }[m[2]] ?? 1));
+    else if (/"content":"\d+ videos?"/.test(html)) snap.s[ch.id] = 0; // страница пришла, строки нет — 0 подписчиков
+  } catch {}
+  console.log(`${ch.name}: ok, подписчиков ${snap.s[ch.id] ?? '?'}`);
 }
 if (!snap.failed.length) delete snap.failed;
 hist.snaps.push(snap);
