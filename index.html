@@ -34,6 +34,18 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
 h1 { font-size: 22px; margin: 0 0 4px; }
 h2 { font-size: 16px; margin: 32px 0 12px; }
 .sub { color: var(--ink-2); margin: 0; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.refresh { font: inherit; font-weight: 600; border: 1px solid var(--border); background: var(--ink); color: var(--surface); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.refresh:disabled { opacity: .55; cursor: default; }
+#refresh-status { color: var(--ink-2); font-size: 13px; }
+.token { margin-top: 16px; }
+.token[hidden] { display: none; }
+.token p { margin: 0 0 8px; }
+.token ol { margin: 0 0 12px; padding-left: 20px; color: var(--ink-2); }
+.token a { color: var(--series); }
+.token-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.token input { font: inherit; flex: 1 1 220px; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 20px; }
 .kpi .label { color: var(--ink-2); font-size: 13px; }
@@ -51,7 +63,7 @@ h2 { font-size: 16px; margin: 32px 0 12px; }
 .ch-name { font-weight: 600; text-decoration: none; color: var(--ink); }
 .ch-name:hover { text-decoration: underline; }
 .ch-group { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.ch-nums { display: flex; gap: 16px; margin: 8px 0 4px; }
+.ch-nums { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; margin: 8px 0 4px; }
 .ch-nums div { font-size: 12px; color: var(--ink-2); }
 .ch-nums b { display: block; font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .status { font-size: 12px; margin-top: 6px; }
@@ -67,8 +79,29 @@ td a { color: var(--ink); }
 </head>
 <body>
 <main>
-  <h1>Завод: YouTube</h1>
-  <p class="sub" id="updated">Загрузка…</p>
+  <div class="head">
+    <div>
+      <h1>Завод: YouTube</h1>
+      <p class="sub" id="updated">Загрузка…</p>
+    </div>
+    <div class="actions">
+      <span id="refresh-status" role="status"></span>
+      <button class="refresh" id="refresh">Обновить статистику</button>
+    </div>
+  </div>
+
+  <div class="card token" id="token-panel" hidden>
+    <p>Кнопка запускает сбор на GitHub, для этого нужен токен. Он хранится только в этом браузере.</p>
+    <ol>
+      <li>Открой <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">создание токена</a>.</li>
+      <li>Repository access → Only select repositories → <b>dashboard</b>. Permissions → Actions → <b>Read and write</b>.</li>
+      <li>Нажми Generate token и вставь его сюда.</li>
+    </ol>
+    <div class="token-row">
+      <input id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="Токен GitHub">
+      <button class="refresh" id="token-save">Сохранить и обновить</button>
+    </div>
+  </div>
 
   <div class="kpis">
     <div class="card kpi"><div class="label">Просмотров всего</div><div class="value" id="k-views">—</div><div class="note">по последним 15 роликам канала</div></div>
@@ -112,6 +145,13 @@ function at(ser, t) { // последний снимок не позже t
   let r = null;
   for (const s of ser) if (s.t <= t) r = s;
   return r;
+}
+
+function sumLikes(snap, ids) {
+  if (!snap) return null;
+  let n = 0;
+  for (const [vid, [, l]] of Object.entries(snap.v)) if (ids.has(hist.videos[vid].ch)) n += l;
+  return n;
 }
 
 function sumViews(snap, ids) {
@@ -272,7 +312,7 @@ function render() {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `<div class="ch-head"><a class="ch-name" href="https://www.youtube.com/channel/${c.id}/shorts" target="_blank" rel="noopener">${c.name}</a><span class="ch-group">${c.group}</span></div>
-      <div class="ch-nums"><div><b>${fmt(v)}</b>просмотров</div><div><b>${dayAgo ? '+' + fmt(v - p) : '—'}</b>за 24 ч</div><div><b>${fmt(now.s[c.id])}</b>подписчиков</div></div>
+      <div class="ch-nums"><div><b>${fmt(v)}</b>просмотров</div><div><b>${dayAgo ? '+' + fmt(v - p) : '—'}</b>за 24 ч</div><div><b>${fmt(now.s[c.id])}</b>подписчиков</div><div><b>${fmt(sumLikes(now, one))}</b>лайков</div></div>
       <div class="chart spark"></div><div class="status ${st[0]}">${st[1]} · роликов ${vids.length}</div>`;
     box.append(card);
     lineChart(card.querySelector('.spark'), week.map(s => ({ t: s.t, y: sumViews(s, one) })), { height: 60, axes: false, from, to });
@@ -298,6 +338,73 @@ document.querySelectorAll('#videos th').forEach(th => th.addEventListener('click
   sortKey = k;
   render();
 }));
+
+// Кнопка: запуск сбора через GitHub Actions. Токен с правом Actions лежит только в localStorage этого браузера
+const REPO = 'MAKSKREV/dashboard', WF = 'collect.yml', TOKEN_KEY = 'gh_dispatch_token';
+const tokenStore = {
+  get() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } },
+  set(v) { try { localStorage.setItem(TOKEN_KEY, v); } catch {} },
+  del() { try { localStorage.removeItem(TOKEN_KEY); } catch {} },
+};
+const refreshBtn = document.getElementById('refresh'), tokenPanel = document.getElementById('token-panel'), tokenInput = document.getElementById('token-input');
+const setStatus = (text) => { document.getElementById('refresh-status').textContent = text; };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function askToken(text) {
+  tokenPanel.hidden = false;
+  setStatus(text);
+  tokenInput.focus();
+}
+
+async function refresh() {
+  const token = tokenStore.get();
+  if (!token) return askToken('Нужен токен, форма ниже');
+  const gh = (path, opts = {}) => fetch(`https://api.github.com/repos/${REPO}${path}`, { cache: 'no-store', ...opts, headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, ...opts.headers } });
+  const runs = `/actions/workflows/${WF}/runs?event=workflow_dispatch&per_page=1`;
+  const lastRun = async () => {
+    const r = await gh(runs);
+    if ([401, 403, 404].includes(r.status)) throw Object.assign(new Error('auth'), { auth: r.status });
+    if (!r.ok) throw new Error(`GitHub ответил ${r.status}`);
+    return (await r.json()).workflow_runs[0] || null;
+  };
+  refreshBtn.disabled = true;
+  try {
+    setStatus('Запускаю сбор…');
+    const before = (await lastRun())?.id ?? 0;
+    const started = await gh(`/actions/workflows/${WF}/dispatches`, { method: 'POST', body: JSON.stringify({ ref: 'main' }) });
+    if ([401, 403, 404].includes(started.status)) throw Object.assign(new Error('auth'), { auth: started.status });
+    if (!started.ok) throw new Error(`GitHub ответил ${started.status}`);
+    const t0 = Date.now();
+    let run = null;
+    while (Date.now() - t0 < 5 * 60e3) {
+      await sleep(4000);
+      const x = await lastRun();
+      if (x && x.id > before) { run = x; if (x.status === 'completed') break; }
+      setStatus(`Собираю данные… ${Math.round((Date.now() - t0) / 1000)} с`);
+    }
+    if (!run || run.status !== 'completed') throw new Error('Сбор идёт дольше 5 минут, загляни позже');
+    if (run.conclusion !== 'success') throw new Error('Сбор завершился с ошибкой');
+    const raw = await gh('/contents/data/history.json', { headers: { Accept: 'application/vnd.github.raw+json' } });
+    hist = await (raw.ok ? raw : await fetch('data/history.json', { cache: 'no-store' })).json();
+    render();
+    setStatus('Статистика обновлена');
+  } catch (e) {
+    if (e.auth) { tokenStore.del(); askToken(e.auth === 401 ? 'Токен не подошёл, создай новый' : 'Токену не хватает прав, нужен Actions: Read and write на репозиторий dashboard'); }
+    else setStatus(e.message === 'Failed to fetch' ? 'Нет связи с GitHub' : e.message);
+  } finally {
+    refreshBtn.disabled = false;
+  }
+}
+
+refreshBtn.addEventListener('click', refresh);
+document.getElementById('token-save').addEventListener('click', () => {
+  const v = tokenInput.value.trim();
+  if (!v) return tokenInput.focus();
+  tokenStore.set(v);
+  tokenInput.value = '';
+  tokenPanel.hidden = true;
+  refresh();
+});
 
 Promise.all([fetch('channels.json').then(r => r.json()), fetch('data/history.json', { cache: 'no-store' }).then(r => r.json())]).then(([c, h]) => {
   channels = c; hist = h;
