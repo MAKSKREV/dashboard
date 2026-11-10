@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Завод: YouTube</title>
+<title>Завод: YouTube и Rutube</title>
 <style>
 :root {
   color-scheme: light;
@@ -75,13 +75,16 @@ th { color: var(--ink-2); font-weight: 500; cursor: pointer; user-select: none; 
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 td a { color: var(--ink); }
 .empty { color: var(--muted); }
+.ch-rt { font-size: 12px; color: var(--ink-2); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--grid); }
+.ch-rt a { color: var(--ink); font-weight: 600; }
+.ch-rt b { color: var(--ink); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 <main>
   <div class="head">
     <div>
-      <h1>Завод: YouTube</h1>
+      <h1>Завод: YouTube и Rutube</h1>
       <p class="sub" id="updated">Загрузка…</p>
     </div>
     <div class="actions">
@@ -103,7 +106,8 @@ td a { color: var(--ink); }
     </div>
   </div>
 
-  <div class="kpis">
+  <h2>YouTube</h2>
+  <div class="kpis" style="margin-top:0">
     <div class="card kpi"><div class="label">Просмотров всего</div><div class="value" id="k-views">—</div><div class="note">по последним 15 роликам канала</div></div>
     <div class="card kpi"><div class="label">Прирост за 24 ч</div><div class="value" id="k-day">—</div><div class="note" id="k-day-note"></div></div>
     <div class="card kpi"><div class="label">Подписчиков</div><div class="value" id="k-subs">—</div><div class="note" id="k-subs-note"></div></div>
@@ -119,7 +123,20 @@ td a { color: var(--ink); }
   <h2>Каналы</h2>
   <div class="grid" id="channels"></div>
 
-  <h2>Ролики</h2>
+  <h2>Rutube</h2>
+  <p class="sub" id="rt-note" style="margin:-4px 0 12px"></p>
+  <div class="kpis" style="margin-top:0">
+    <div class="card kpi"><div class="label">Просмотров на Rutube</div><div class="value" id="r-views">—</div><div class="note">все ролики каналов</div></div>
+    <div class="card kpi"><div class="label">Прирост за 24 ч</div><div class="value" id="r-day">—</div><div class="note" id="r-day-note"></div></div>
+    <div class="card kpi"><div class="label">Подписчиков</div><div class="value" id="r-subs">—</div><div class="note" id="r-subs-note"></div></div>
+    <div class="card kpi"><div class="label">Роликов на Rutube</div><div class="value" id="r-count">—</div><div class="note" id="r-count-note"></div></div>
+  </div>
+  <div class="card tablewrap" style="margin-top:12px"><table id="rt-videos"><thead><tr>
+    <th data-k="title">Ролик на Rutube</th><th data-k="ch">Канал</th><th data-k="published">Вышел</th>
+    <th data-k="views" class="num">Просмотры</th><th data-k="day" class="num">За 24 ч</th>
+  </tr></thead><tbody></tbody></table></div>
+
+  <h2>Ролики YouTube</h2>
   <div class="card tablewrap"><table id="videos"><thead><tr>
     <th data-k="title">Ролик</th><th data-k="ch">Канал</th><th data-k="published">Вышел</th>
     <th data-k="views" class="num">Просмотры</th><th data-k="day" class="num">За 24 ч</th><th data-k="likes" class="num">Лайки</th>
@@ -129,15 +146,17 @@ td a { color: var(--ink); }
 <script>
 const fmt = n => n == null ? '—' : n.toLocaleString('ru-RU');
 const DAY = 864e5;
-let channels, hist, group = 'Все', sortKey = 'views', sortDir = -1;
+let channels, hist, group = 'Все', sortKey = 'views', sortDir = -1, rtSortKey = 'published', rtSortDir = -1;
 
 // Просмотры каждого ролика в каждом снимке; ролик, выпавший из RSS, держит последнее значение.
 function series() {
-  const last = {}, subs = {};
+  const last = {}, subs = {}, rv = {}, rs = {};
   return hist.snaps.map(s => {
     for (const [vid, [v, l]] of Object.entries(s.v)) last[vid] = [v, l];
     for (const [ch, n] of Object.entries(s.s ?? {})) subs[ch] = n;
-    return { t: new Date(s.t), v: { ...last }, s: { ...subs } };
+    for (const [vid, n] of Object.entries(s.rv ?? {})) rv[vid] = n; // Rutube собирается с 11.11.2026
+    for (const [ch, n] of Object.entries(s.rs ?? {})) rs[ch] = n;
+    return { t: new Date(s.t), v: { ...last }, s: { ...subs }, rv: { ...rv }, rs: { ...rs }, hasRt: !!s.rv };
   });
 }
 
@@ -158,6 +177,20 @@ function sumViews(snap, ids) {
   if (!snap) return null;
   let n = 0;
   for (const [vid, [v]] of Object.entries(snap.v)) if (ids.has(hist.videos[vid].ch)) n += v;
+  return n;
+}
+
+// Rutube: просмотры по роликам каналов из ids; null, если в снимке Rutube ещё не собирался
+function rtViews(snap, ids) {
+  if (!snap || !snap.hasRt) return null;
+  let n = 0;
+  for (const [vid, v] of Object.entries(snap.rv)) if (ids.has(hist.rt?.[vid]?.ch)) n += v;
+  return n;
+}
+function rtSubs(snap, ids) {
+  if (!snap || !snap.hasRt) return null;
+  let n = 0;
+  for (const id of ids) n += snap.rs[id] ?? 0;
   return n;
 }
 
@@ -298,6 +331,14 @@ function render() {
   const to = +now.t, from = to - 7 * DAY, week = ser.filter(s => +s.t >= from);
   barChart(document.getElementById('total'), daily(ser, ids));
 
+  const rtDayAgo = (() => { let r = null; for (const s of ser) if (s.hasRt && +s.t <= +now.t - DAY) r = s; return r; })();
+  const rtLine = (c, now, ago) => {
+    const one = new Set([c.id]), v = rtViews(now, one), p = rtViews(ago, one);
+    const n = Object.values(hist.rt ?? {}).filter(m => m.ch === c.id).length;
+    return `<div class="ch-rt"><a href="https://rutube.ru/channel/${c.rutube}/" target="_blank" rel="noopener">Rutube</a>: <b>${fmt(v)}</b> просм.${ago ? ` · <b>+${fmt(v - p)}</b> за 24 ч` : ''} · <b>${fmt(now.rs[c.id])}</b> подп. · роликов ${n}</div>`;
+  };
+  renderRutube(ser, now, rtDayAgo, ids);
+
   let idle = 0;
   const box = document.getElementById('channels');
   box.innerHTML = '';
@@ -313,7 +354,7 @@ function render() {
     card.className = 'card';
     card.innerHTML = `<div class="ch-head"><a class="ch-name" href="https://www.youtube.com/channel/${c.id}/shorts" target="_blank" rel="noopener">${c.name}</a><span class="ch-group">${c.group}</span></div>
       <div class="ch-nums"><div><b>${fmt(v)}</b>просмотров</div><div><b>${dayAgo ? '+' + fmt(v - p) : '—'}</b>за 24 ч</div><div><b>${fmt(now.s[c.id])}</b>подписчиков</div><div><b>${fmt(sumLikes(now, one))}</b>лайков</div></div>
-      <div class="chart spark"></div><div class="status ${st[0]}">${st[1]} · роликов ${vids.length}</div>`;
+      <div class="chart spark"></div><div class="status ${st[0]}">${st[1]} · роликов ${vids.length}</div>${c.rutube ? rtLine(c, now, rtDayAgo) : ''}`;
     box.append(card);
     lineChart(card.querySelector('.spark'), week.map(s => ({ t: s.t, y: sumViews(s, one) })), { height: 60, axes: false, from, to });
   }
@@ -331,6 +372,40 @@ function render() {
     <td>${new Date(r.published).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</td>
     <td class="num">${fmt(r.views)}</td><td class="num">${r.day == null ? '—' : '+' + fmt(r.day)}</td><td class="num">${fmt(r.likes)}</td></tr>`).join('');
 }
+
+function renderRutube(ser, now, ago, ids) {
+  const rtIds = new Set(channels.filter(c => c.rutube && ids.has(c.id)).map(c => c.id));
+  const firstRt = ser.find(s => s.hasRt);
+  document.getElementById('rt-note').textContent = !firstRt ? 'Сбор Rutube начнётся со следующего снимка.'
+    : `Каналов на Rutube: ${rtIds.size} из ${ids.size} в выборке. Сбор с ${firstRt.t.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. Ролики выходят по порядку с первой серии YouTube.`;
+  const v = rtViews(now, rtIds), p = rtViews(ago, rtIds), sNow = rtSubs(now, rtIds), sAgo = rtSubs(ago, rtIds);
+  document.getElementById('r-views').textContent = fmt(v);
+  document.getElementById('r-day').textContent = ago ? '+' + fmt(v - p) : '—';
+  document.getElementById('r-day-note').textContent = ago ? `с ${ago.t.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'нужно 24 ч истории Rutube';
+  document.getElementById('r-subs').textContent = fmt(sNow);
+  document.getElementById('r-subs-note').textContent = sAgo != null && sNow != null ? `${sNow - sAgo >= 0 ? '+' : ''}${fmt(sNow - sAgo)} за 24 ч` : 'прирост появится через сутки';
+  const name = Object.fromEntries(channels.map(c => [c.id, c.name]));
+  const rows = Object.entries(hist.rt ?? {}).filter(([, m]) => rtIds.has(m.ch)).map(([vid, m]) => {
+    const views = now.rv[vid] ?? 0, before = ago?.rv[vid];
+    return { vid, title: m.title, ch: name[m.ch], published: m.published, views, day: ago ? views - (before ?? 0) : null };
+  });
+  const fresh = rows.filter(r => +now.t - new Date(r.published) < DAY).length;
+  document.getElementById('r-count').textContent = fmt(rows.length);
+  document.getElementById('r-count-note').textContent = `за 24 ч: ${fmt(fresh)}`;
+  rows.sort((a, b) => (a[rtSortKey] > b[rtSortKey] ? 1 : a[rtSortKey] < b[rtSortKey] ? -1 : 0) * rtSortDir);
+  document.querySelector('#rt-videos tbody').innerHTML = rows.length ? rows.map(r => `<tr>
+    <td><a href="https://rutube.ru/video/${r.vid}/" target="_blank" rel="noopener">${r.title}</a></td><td>${r.ch}</td>
+    <td>${new Date(r.published).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</td>
+    <td class="num">${fmt(r.views)}</td><td class="num">${r.day == null ? '—' : '+' + fmt(r.day)}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">Роликов на Rutube в этой группе пока нет</td></tr>';
+}
+
+document.querySelectorAll('#rt-videos th').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  rtSortDir = rtSortKey === k ? -rtSortDir : (['title', 'ch'].includes(k) ? 1 : -1);
+  rtSortKey = k;
+  render();
+}));
 
 document.querySelectorAll('#videos th').forEach(th => th.addEventListener('click', () => {
   const k = th.dataset.k;

@@ -25,7 +25,8 @@
   "name": "Чья фамилия",
   "handle": "chya.familiya",
   "audience": "история семьи",
-  "group": "Платящие"
+  "group": "Платящие",
+  "rutube": 83030920
  },
  {
   "id": "UCkqck5qjGw9gVOKagrYkdSA",
@@ -39,7 +40,8 @@
   "name": "Битая или нет",
   "handle": "bitaya_ili_net",
   "audience": "покупатели б/у авто",
-  "group": "Платящие"
+  "group": "Платящие",
+  "rutube": 83030409
  },
  {
   "id": "UCS7ljKkVhRbxno4PUJAJiRw",
@@ -67,52 +69,62 @@
   "name": "Почему кот так делает",
   "handle": "pochemu_kot_tak",
   "audience": "владельцы кошек",
-  "group": "Платящие"
+  "group": "Платящие",
+  "rutube": 83030806
  },
  {
   "id": "UCFLl1O0qOSdG5gvN50SjcrA",
   "name": "Не досматривай",
-  "group": "Хоррор"
+  "group": "Хоррор",
+  "rutube": 83030999
  },
  {
   "id": "UCiwNRpgFyoeEw_E03oPT9Ow",
   "name": "Правила дома",
-  "group": "Хоррор"
+  "group": "Хоррор",
+  "rutube": 82829578
  },
  {
   "id": "UCAT4cl_C7pQc8BEzEr1LNWQ",
   "name": "Одна строка",
-  "group": "Анимация"
+  "group": "Анимация",
+  "rutube": 83030697
  },
  {
   "id": "UCQYrwvuD7GF16EBqbOAv3Fw",
   "name": "Как взломали",
-  "group": "Анимация"
+  "group": "Анимация",
+  "rutube": 83030358
  },
  {
   "id": "UCUs187hqdHprwPBka0N5r5g",
   "name": "Как это продали",
-  "group": "Анимация"
+  "group": "Анимация",
+  "rutube": 83030271
  },
  {
   "id": "UCaNmGP8YOxFqmMN3CIE1mGQ",
   "name": "Зачем это учить",
-  "group": "Анимация"
+  "group": "Анимация",
+  "rutube": 82829225
  },
  {
   "id": "UCEV7CfS8cic4s7cCYhDyOgw",
   "name": "Кухня бабушки Зины",
-  "group": "Персонажи"
+  "group": "Персонажи",
+  "rutube": 82829590
  },
  {
   "id": "UCT7VYRHglE_OpIECd6UFooQ",
   "name": "Дед Степан",
-  "group": "Персонажи"
+  "group": "Персонажи",
+  "rutube": 82829556
  },
  {
   "id": "UCdOOwUywKiIhCoJhsz-zCMQ",
   "name": "Тётя Галя",
-  "group": "Персонажи"
+  "group": "Персонажи",
+  "rutube": 82829538
  },
  {
   "id": "UCun0oeniBZ-zNu7e0F8CK4Q",

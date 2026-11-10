@@ -1,4 +1,4 @@
-// Снимок просмотров и лайков по открытым RSS YouTube: без ключей и входа.
+// Снимок просмотров и лайков по открытым RSS YouTube и открытому API Rutube: без ключей и входа.
 // RSS отдаёт последние 15 роликов канала. Запуск: node collect.mjs
 import { readFile, writeFile } from 'node:fs/promises';
 
@@ -47,6 +47,27 @@ for (const ch of channels) {
     else if (/"content":"\d+ videos?"/.test(html)) snap.s[ch.id] = 0; // страница пришла, строки нет — 0 подписчиков
   } catch {}
   console.log(`${ch.name}: ok, подписчиков ${snap.s[ch.id] ?? '?'}`);
+}
+// Rutube: открытый API, просмотры каждого ролика (hits) и подписчики. Время публикации Rutube отдаёт по Москве без пояса
+hist.rt ??= {};
+snap.rv = {}; snap.rs = {};
+const rtGet = async (u) => { const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 Chrome/130' }, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error(r.status); return r.json(); };
+for (const ch of channels.filter((c) => c.rutube)) {
+  try {
+    snap.rs[ch.id] = (await rtGet(`https://rutube.ru/api/profile/user/${ch.rutube}/?format=json`)).subscribers_count ?? 0;
+    for (let page = 1; page <= 20; page++) {
+      const j = await rtGet(`https://rutube.ru/api/video/person/${ch.rutube}/?format=json&page=${page}`);
+      for (const v of j.results ?? []) {
+        hist.rt[v.id] = { ch: ch.id, title: v.title, published: (v.publication_ts || v.created_ts) + '+03:00' };
+        snap.rv[v.id] = v.hits ?? 0;
+      }
+      if (!j.has_next) break;
+    }
+    console.log(`Rutube ${ch.name}: ok`);
+  } catch (e) {
+    (snap.rtFailed ??= []).push(ch.id);
+    console.error(`Rutube ${ch.name}: ${e.message}`);
+  }
 }
 if (!snap.failed.length) delete snap.failed;
 hist.snaps.push(snap);
