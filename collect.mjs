@@ -69,6 +69,7 @@ for (const ch of channels.filter((c) => c.rutube)) {
     console.error(`Rutube ${ch.name}: ${e.message}`);
   }
 }
+if (snap.rtFailed?.length === channels.filter((c) => c.rutube).length) { delete snap.rv; delete snap.rs; } // Rutube недоступен целиком — снимок без Rutube, а не нули
 if (!snap.failed.length) delete snap.failed;
 hist.snaps.push(snap);
 await writeFile(histUrl, JSON.stringify(hist));
