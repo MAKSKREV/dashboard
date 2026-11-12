@@ -11,14 +11,16 @@
   "name": "Почему не звонят",
   "handle": "pochemu.ne.zvonyat",
   "audience": "малый бизнес",
-  "group": "Платящие"
+  "group": "Платящие",
+  "off": "2026-11-12"
  },
  {
   "id": "UC6-9Oqtlo3UvfMj8DMkfVrQ",
   "name": "Карточка за 1000 ₽",
   "handle": "kartochka.za.1000",
   "audience": "селлеры",
-  "group": "Платящие"
+  "group": "Платящие",
+  "off": "2026-11-12"
  },
  {
   "id": "UClMZ2CfRUrwHcAHK5hsL_dA",
@@ -48,14 +50,16 @@
   "name": "Как это провалили",
   "handle": "kak_eto_provalili",
   "audience": "владельцы бизнеса, маркетологи",
-  "group": "Платящие"
+  "group": "Платящие",
+  "off": "2026-11-12"
  },
  {
   "id": "UCYipW2U2zRkDPlWrPhI4BPA",
   "name": "Без камеры",
   "handle": "bez_kamery_video",
   "audience": "SMM и фрилансеры",
-  "group": "Платящие"
+  "group": "Платящие",
+  "off": "2026-11-12"
  },
  {
   "id": "UCgK7ygrws5DFY0WgVdFkisg",
@@ -76,7 +80,8 @@
   "id": "UCFLl1O0qOSdG5gvN50SjcrA",
   "name": "Не досматривай",
   "group": "Хоррор",
-  "rutube": 83030999
+  "rutube": 83030999,
+  "off": "2026-11-12"
  },
  {
   "id": "UCiwNRpgFyoeEw_E03oPT9Ow",
@@ -94,13 +99,15 @@
   "id": "UCQYrwvuD7GF16EBqbOAv3Fw",
   "name": "Как взломали",
   "group": "Анимация",
-  "rutube": 83030358
+  "rutube": 83030358,
+  "off": "2026-11-12"
  },
  {
   "id": "UCUs187hqdHprwPBka0N5r5g",
   "name": "Как это продали",
   "group": "Анимация",
-  "rutube": 83030271
+  "rutube": 83030271,
+  "off": "2026-11-12"
  },
  {
   "id": "UCaNmGP8YOxFqmMN3CIE1mGQ",
@@ -129,30 +136,35 @@
  {
   "id": "UCun0oeniBZ-zNu7e0F8CK4Q",
   "name": "Дед Аркадий",
-  "group": "Персонажи"
+  "group": "Персонажи",
+  "off": "2026-11-12"
  },
  {
   "id": "UCO1NAhhunPd8kaGHd221Jyw",
   "name": "One Tiny Mistake",
   "handle": "one.tiny.mistake",
-  "group": "США"
+  "group": "США",
+  "off": "2026-11-12"
  },
  {
   "id": "UCeNrqxo8hrQKb8qkuFY6cbQ",
   "name": "The Rules of the House",
   "handle": "therulesofthehouse",
-  "group": "США"
+  "group": "США",
+  "off": "2026-11-12"
  },
  {
   "id": "UCTsKRKSnTwmWdJewpcsaUgw",
   "name": "Behind Your Walls",
   "handle": "behindyourwallshomehq",
-  "group": "США"
+  "group": "США",
+  "off": "2026-11-12"
  },
  {
   "id": "UCUyVhmqEwwXUDPSfvXF2iOQ",
   "name": "Why Food Does That",
   "handle": "whyfooddoesthis",
-  "group": "США"
+  "group": "США",
+  "off": "2026-11-12"
  }
 ]

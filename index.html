@@ -310,7 +310,8 @@ function lineChart(el, pts, { height = 220, axes = true, from, to } = {}) {
 
 function render() {
   const ser = series(), now = ser.at(-1), dayAgo = at(ser, new Date(+now.t - DAY));
-  const shown = channels.filter(c => group === 'Все' || c.group === group);
+  // отключённые каналы (поле off, 12.11.2026) видны только на кнопке «Отключены»
+  const shown = group === 'Отключены' ? channels.filter(c => c.off) : channels.filter(c => !c.off && (group === 'Все' || c.group === group));
   const ids = new Set(shown.map(c => c.id));
 
   document.getElementById('updated').textContent =
@@ -347,8 +348,8 @@ function render() {
     const vids = Object.entries(hist.videos).filter(([, m]) => m.ch === c.id);
     const lastPub = vids.reduce((a, [, m]) => Math.max(a, +new Date(m.published)), 0);
     const hrs = lastPub ? (+now.t - lastPub) / 36e5 : Infinity;
-    if (hrs > 24) idle++;
-    const st = hrs <= 24 ? ['good', '✓ ролик за сутки есть'] : hrs <= 48 ? ['warn', `! последний ${Math.round(hrs)} ч назад`] : ['bad', `✕ последний ${lastPub ? Math.round(hrs / 24) + ' дн. назад' : '—'}`];
+    if (hrs > 24 && !c.off) idle++;
+    const st = c.off ? ['', `отключён с ${new Date(c.off).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}, новых роликов нет`] : hrs <= 24 ? ['good', '✓ ролик за сутки есть'] : hrs <= 48 ? ['warn', `! последний ${Math.round(hrs)} ч назад`] : ['bad', `✕ последний ${lastPub ? Math.round(hrs / 24) + ' дн. назад' : '—'}`];
     const v = sumViews(now, one), p = sumViews(dayAgo, one);
     const card = document.createElement('div');
     card.className = 'card';
@@ -483,7 +484,7 @@ document.getElementById('token-save').addEventListener('click', () => {
 
 Promise.all([fetch('channels.json').then(r => r.json()), fetch('data/history.json', { cache: 'no-store' }).then(r => r.json())]).then(([c, h]) => {
   channels = c; hist = h;
-  const groups = ['Все', ...new Set(c.map(x => x.group))];
+  const groups = ['Все', ...new Set(c.filter(x => !x.off).map(x => x.group)), ...(c.some(x => x.off) ? ['Отключены'] : [])];
   const f = document.getElementById('filters');
   for (const g of groups) {
     const b = document.createElement('button');
