@@ -1,0 +1,5 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TikTok подключён</title>
+<style>body{font:20px/1.5 system-ui,sans-serif;max-width:760px;margin:60px auto;padding:0 16px;text-align:center;color:#222;background:#fff}#s{font-weight:700;font-size:28px}</style></head><body>
+<p id="s">…</p><p id="d"></p>
+<script>const q=new URLSearchParams(location.search);document.getElementById("s").textContent=q.get("code")?"Аккаунт подключён. Окно можно закрыть.":"Подключение не прошло";document.getElementById("d").textContent=q.get("error_description")||q.get("error")||"";</script>
+</body></html>
